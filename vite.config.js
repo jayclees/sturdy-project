@@ -1,42 +1,51 @@
 import { defineConfig } from 'vite'
+import dns from 'node:dns/promises'
 
-export default defineConfig({
-    logLevel: 'info',
-    server: {
-        cors: {
-            // the origin you will be accessing via browser
-            origin: 'http://172.19.0.2',
-        },
-        origin: 'http://172.19.0.2',
-    },
-    build: {
-        // generate .vite/manifest.json in outDir
-        manifest: true,
-        rolldownOptions: {
-            input: './resource/js/main.js',
-        },
-        outDir: './public/dist',
-        modulePreload: {
-            polyfill: true,
-        },
-    },
-    publicDir: false,
-    css: {
-        preprocessorOptions: {
-            scss: {
-                silenceDeprecations: [
-                    'import',
-                    'mixed-decls',
-                    'color-functions',
-                    'global-builtin',
-                    'if-function',
-                ],
+export default defineConfig(async () => {
+    let config = {
+        logLevel: 'info',
+        build: {
+            // generate .vite/manifest.json in outDir
+            manifest: true,
+            rolldownOptions: {
+                input: './resource/js/main.js',
+            },
+            outDir: './public/dist',
+            modulePreload: {
+                polyfill: true,
             },
         },
-    },
-    plugins: [
-        watchResourceDir(),
-    ]
+        publicDir: false,
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    silenceDeprecations: [
+                        'import',
+                        'mixed-decls',
+                        'color-functions',
+                        'global-builtin',
+                        'if-function',
+                    ],
+                },
+            },
+        },
+        plugins: [
+            watchResourceDir(),
+        ]
+    }
+
+    if (process.env.IS_DOCKER === '1') {
+        let nginxAddr = await dns.lookup('nginx').then((result) => result.address)
+        config.server = {
+            cors: {
+                // This needs to be equal to the url (origin) you see in the address bar
+                origin: `http://${nginxAddr}`,
+            },
+            origin: `http://${nginxAddr}`,
+        }
+    }
+
+    return config
 })
 
 function watchResourceDir() {
