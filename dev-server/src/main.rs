@@ -20,8 +20,9 @@ async fn main() {
     // server running while build is running. We can watch the
     // target/debug/binary file for changes, and restart
     // the app server with near zero downtime.
-    let mut addrs_iter = "node:5173".to_socket_addrs().unwrap();
-    let vite_url = addrs_iter.next().unwrap().to_string();
+
+    let host = resolve_host_url();
+    let vite_url = resolve_vite_url();
     let dev_server_root = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let app_root = dev_server_root.join("..").canonicalize().unwrap();
     let app_src = dev_server_root.join("../src").canonicalize().unwrap();
@@ -31,13 +32,14 @@ async fn main() {
             args: vec![
                 "-c".to_owned(),
                 format!(
-                    "cd {} && cargo run -- --host=0.0.0.0 --port=3000 --vite-url={}",
+                    "cd {} && cargo run -- --host={} --port=3000 --vite-url={}",
                     app_root.display(),
+                    host,
                     vite_url
                 ),
             ],
         }
-        .into(),
+            .into(),
         options: Default::default(),
     }));
     let job = Arc::new(job);
@@ -123,4 +125,25 @@ async fn main() {
 
     job.delete_now().await;
     task.await.unwrap(); // Make sure the task is fully cleaned up
+}
+
+/// If running in Docker container, bind to 0.0.0.0, else bind to 127.0.0.1.
+fn resolve_host_url() -> String {
+    if let Ok(t) = env::var("IS_DOCKER") {
+        "0.0.0.0".to_owned()
+    } else {
+        "127.0.0.1".to_owned()
+    }
+}
+
+/// Attempt to resolve the Vite server in Docker network, if it
+/// fails, assume 127.0.0.1:5173 which is the Vite default.
+fn resolve_vite_url() -> String {
+    let addrs_iter = "node:5173".to_socket_addrs();
+    let vite_url = if let Ok(mut iter) = addrs_iter {
+        iter.next().unwrap().to_string()
+    } else {
+        "127.0.0.1:5173".to_owned()
+    };
+    vite_url
 }
