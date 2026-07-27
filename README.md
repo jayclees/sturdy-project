@@ -8,6 +8,7 @@ A Rust-based framework for the modern web.
 cd /path/to/projects
 git clone https://github.com/jayclees/sturdy-project my-project
 cd my-project
+cp .env.example .env
 cargo run
 ```
 
