@@ -5,8 +5,8 @@ services:
       context: ./docker/app
       dockerfile: Dockerfile
     # temporary to keep container running
-    command: tail -f Cargo.toml
-#    command: /bin/bash -c "cargo run -- --host=0.0.0.0"
+#    command: tail -f Cargo.toml
+    command: /bin/bash -c "cargo run"
     working_dir: /home/www/app/dev-server
     volumes:
       - ./:/home/www/app
