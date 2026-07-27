@@ -79,7 +79,6 @@ async fn main() {
                         let mut time = arc.lock().await;
                         let elapsed = time.elapsed().expect("Failed to get elapsed time");
                         if elapsed > Duration::new(0, 1000000 * 10) {
-                            dbg!(&path);
                             *time = SystemTime::now();
                             let r#type = match kind {
                                 EventKind::Create(_) => "Create",
@@ -125,7 +124,10 @@ async fn main() {
     })
         .unwrap();
 
-    wx.config.pathset([app_root]);
+    wx.config.pathset([
+        app_root.join("./src"),
+        app_root.join("./resouce/template"),
+    ]);
     wx.main().await.unwrap().unwrap();
 
     job.delete_now().await;
