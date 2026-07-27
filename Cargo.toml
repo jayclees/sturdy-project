@@ -12,7 +12,7 @@ sea-orm = {
     version = "2.0.0-rc",
     features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros", "entity-registry", "schema-sync"]
 }
-sturdy = "0.1.1"
+sturdy = "0.1.2"
 
 [workspace]
 resolver = "3"
